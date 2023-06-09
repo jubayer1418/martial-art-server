@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const app = express();
 require("dotenv").config();
 const port = process.env.PORT || 5000;
+const stripe = require("stripe")(process.env.PAYMENT);
 //middlewere
 app.use(cors());
 app.use(express.json());
@@ -201,7 +202,19 @@ async function run() {
       const result = await studentClassCollection.find(query).toArray();
       res.send(result);
     });
-
+    //payment
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      if (price) {
+        const amount = parseFloat(price) * 100;
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+        res.send({ clienSecret: paymentIntent.client_secret });
+      }
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
