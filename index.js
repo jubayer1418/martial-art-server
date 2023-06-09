@@ -40,6 +40,7 @@ async function run() {
     await client.connect();
     const usersCollection = client.db("martialDb").collection("users");
     const classesCollection = client.db("martialDb").collection("classes");
+    const feedbackCollection = client.db("martialDb").collection("feedback");
     const instructorsCollection = client
       .db("martialDb")
       .collection("instructors");
@@ -60,6 +61,20 @@ async function run() {
       }
       next();
     };
+    //feedback
+    app.get("/feedback", async (req, res) => {
+      // const id = req.params.id;
+      // const query = { id: id };
+      // console.log(query);
+      const result = await feedbackCollection.find().toArray();
+      res.send(result);
+    });
+    app.post("/feedback", async (req, res) => {
+      const user = req.body;
+
+      const result = await feedbackCollection.insertOne(user);
+      res.send(result);
+    });
     //users relades api
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
@@ -67,30 +82,39 @@ async function run() {
     });
     app.post("/users", async (req, res) => {
       const user = req.body;
-      const query = { email: user.email };
+      console.log(user);
+      const query = { email: user?.email };
+      console.log(query);
       const alreadyUser = await usersCollection.findOne(query);
       if (alreadyUser) {
         return res.send({ message: "user already exists" });
       }
+
+      // const alreadyRole = await usersCollection.findOne({ role: user?.role });
+      // if (alreadyRole) {
+      //   return res.send({ message: "user role already exists" });
+      // }
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
     app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
+      console.log(req.decoded.email);
       if (req.decoded.email !== email) {
         res.send({ admin: false });
       }
       const query = { email: email };
-      const user = await usersCollection.findOne(query);
-      const result = { admin: user?.role === "admin" };
+      const result = await usersCollection.findOne(query);
+      // const result = { admin: user?.role === "admin" };
       res.send(result);
     });
     app.patch("/users/admin/:id", async (req, res) => {
+      console.log(req.query.role);
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const doc = {
         $set: {
-          role: "admin",
+          role: req.query.role,
         },
       };
       const result = await usersCollection.updateOne(filter, doc);
@@ -103,6 +127,45 @@ async function run() {
     });
     app.get("/addclass", async (req, res) => {
       const result = await classesCollection.find().toArray();
+      res.send(result);
+    });
+    app.patch("/addclass/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(req.query.status);
+      const filter = { _id: new ObjectId(id) };
+      const doc = {
+        $set: {
+          Status: req.query.status,
+        },
+      };
+      const result = await classesCollection.updateOne(filter, doc);
+      res.send(result);
+    });
+    app.put("/addclass/:id", async (req, res) => {
+      const id = req.params.id;
+      const {
+        Status,
+        Price,
+        Available_Seats,
+        Instructor_Email,
+        Instructor_Name,
+        Class_Image,
+        Class_Name,
+      } = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+      const doc = {
+        $set: {
+          Status,
+          Price,
+          Available_Seats,
+          Instructor_Email,
+          Instructor_Name,
+          Class_Image,
+          Class_Name,
+        },
+      };
+      const result = await classesCollection.updateOne(filter, doc);
       res.send(result);
     });
     // Send a ping to confirm a successful connection
