@@ -41,6 +41,9 @@ async function run() {
     const usersCollection = client.db("martialDb").collection("users");
     const classesCollection = client.db("martialDb").collection("classes");
     const feedbackCollection = client.db("martialDb").collection("feedback");
+    const studentClassCollection = client
+      .db("martialDb")
+      .collection("studentclass");
     const instructorsCollection = client
       .db("martialDb")
       .collection("instructors");
@@ -120,6 +123,7 @@ async function run() {
       const result = await usersCollection.updateOne(filter, doc);
       res.send(result);
     });
+    //instructo
     app.post("/addclass", async (req, res) => {
       const newClass = req.body;
       const result = await classesCollection.insertOne(newClass);
@@ -131,7 +135,7 @@ async function run() {
     });
     app.patch("/addclass/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(req.query.status);
+
       const filter = { _id: new ObjectId(id) };
       const doc = {
         $set: {
@@ -168,6 +172,36 @@ async function run() {
       const result = await classesCollection.updateOne(filter, doc);
       res.send(result);
     });
+    //student
+    app.post("/selectedclass", async (req, res) => {
+      const addClass = req.body;
+      const result = await studentClassCollection.insertOne(addClass);
+      res.send(result);
+    });
+    app.delete("/selectedclass/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await studentClassCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.get("/selectedclass", verifyJWT, async (req, res) => {
+      const email = req.query.email;
+
+      if (!email) {
+        res.send([]);
+      }
+
+      const decodedEmail = req.decoded.email;
+      if (email !== decodedEmail) {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden access" });
+      }
+      const query = { email: email };
+      const result = await studentClassCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
