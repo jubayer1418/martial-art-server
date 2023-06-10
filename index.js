@@ -42,6 +42,7 @@ async function run() {
     const usersCollection = client.db("martialDb").collection("users");
     const classesCollection = client.db("martialDb").collection("classes");
     const feedbackCollection = client.db("martialDb").collection("feedback");
+    const paymentCollection = client.db("martialDb").collection("payment");
     const studentClassCollection = client
       .db("martialDb")
       .collection("studentclass");
@@ -65,7 +66,9 @@ async function run() {
       }
       next();
     };
-    //feedback
+    //feedback --------------------------------------------
+    //fedback-----------------
+
     app.get("/feedback", async (req, res) => {
       // const id = req.params.id;
       // const query = { id: id };
@@ -79,6 +82,11 @@ async function run() {
       const result = await feedbackCollection.insertOne(user);
       res.send(result);
     });
+    //feeddback end------------------------
+    //feeddback end------------------------
+    //feeddback end------------------------
+    //users relades api-------------------------------
+    //users relades api
     //users relades api
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
@@ -86,9 +94,9 @@ async function run() {
     });
     app.post("/users", async (req, res) => {
       const user = req.body;
-      console.log(user);
+      // console.log(user);
       const query = { email: user?.email };
-      console.log(query);
+      // console.log(query);
       const alreadyUser = await usersCollection.findOne(query);
       if (alreadyUser) {
         return res.send({ message: "user already exists" });
@@ -103,7 +111,7 @@ async function run() {
     });
     app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
-      console.log(req.decoded.email);
+      // console.log(req.decoded.email);
       if (req.decoded.email !== email) {
         res.send({ admin: false });
       }
@@ -113,7 +121,7 @@ async function run() {
       res.send(result);
     });
     app.patch("/users/admin/:id", async (req, res) => {
-      console.log(req.query.role);
+      // console.log(req.query.role);
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const doc = {
@@ -124,6 +132,10 @@ async function run() {
       const result = await usersCollection.updateOne(filter, doc);
       res.send(result);
     });
+    //user end--------------------------
+    //user end--------------------------
+    //user end--------------------------
+    //user end--------------------------
     //instructo
     app.post("/addclass", async (req, res) => {
       const newClass = req.body;
@@ -131,13 +143,26 @@ async function run() {
       res.send(result);
     });
     app.get("/addclass", async (req, res) => {
+      const query = { Instructor_Email: req.query.email };
+      const result = await classesCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.get("/addclasses", async (req, res) => {
+      const result = await classesCollection
+        .find({ Status: "approve" })
+        .toArray();
+      res.send(result);
+    });
+    app.get("/alladdclasses", async (req, res) => {
       const result = await classesCollection.find().toArray();
       res.send(result);
     });
+
     app.patch("/addclass/:id", async (req, res) => {
       const id = req.params.id;
-
+      console.log(req.params.id);
       const filter = { _id: new ObjectId(id) };
+      // if (req.query.status) {
       const doc = {
         $set: {
           Status: req.query.status,
@@ -145,6 +170,16 @@ async function run() {
       };
       const result = await classesCollection.updateOne(filter, doc);
       res.send(result);
+      // }
+      // if (req.query.available) {
+      //   const doc = {
+      //     $set: {
+      //       Available_Seats: req.body.available,
+      //     },
+      //   };
+      //   const result = await classesCollection.updateOne(filter, doc);
+      //   res.send(result);
+      // }
     });
     app.put("/addclass/:id", async (req, res) => {
       const id = req.params.id;
@@ -173,12 +208,36 @@ async function run() {
       const result = await classesCollection.updateOne(filter, doc);
       res.send(result);
     });
+    //class-------------------
+    //class-------------------
+    //class-------------------
+    //class-------------------
+    //class-------------------
     //student
     app.post("/selectedclass", async (req, res) => {
       const addClass = req.body;
       const result = await studentClassCollection.insertOne(addClass);
       res.send(result);
     });
+    app.patch("/selectedclass/:id", async (req, res) => {
+      const id = req.params.id;
+      const newa = req.body;
+      console.log(newa);
+      const filter = { _id: new ObjectId(id) };
+      // console.log(req.body);
+      const doc = {
+        $set: {
+          ...req.body,
+        },
+      };
+      const result = await studentClassCollection.updateOne(filter, doc);
+      res.send(result);
+    });
+    // app.post("/payments", verifyJWT, async (req, res) => {
+    //   const payment = req.body;
+    //   const result = await paymentCollection.insertOne(payment);
+    //   res.send(result);
+    // });
     app.delete("/selectedclass/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -202,6 +261,15 @@ async function run() {
       const result = await studentClassCollection.find(query).toArray();
       res.send(result);
     });
+    app.get("/endrolclasses", verifyJWT, async (req, res) => {
+      const query = { cheack: 2023 };
+      const result = await studentClassCollection
+        .find(query)
+        .sort({ date: -1 })
+        .toArray();
+      res.send(result);
+    });
+
     //payment
     app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const { price } = req.body;
@@ -215,6 +283,7 @@ async function run() {
         res.send({ clienSecret: paymentIntent.client_secret });
       }
     });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
