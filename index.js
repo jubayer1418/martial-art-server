@@ -89,6 +89,23 @@ async function run() {
     //users relades api
     //users relades api
     app.get("/users", async (req, res) => {
+      const query = { role: req.query.role };
+      const result = await usersCollection
+        .find(query)
+        .sort({ endrol: -1 })
+        .limit(6)
+        .toArray();
+      res.send(result);
+    });
+    app.get("/allusers", async (req, res) => {
+      const query = { role: req.query.role };
+      const result = await usersCollection
+        .find(query)
+
+        .toArray();
+      res.send(result);
+    });
+    app.get("/useramin", async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -132,6 +149,29 @@ async function run() {
       const result = await usersCollection.updateOne(filter, doc);
       res.send(result);
     });
+    app.patch("/users", async (req, res) => {
+      // console.log(req.query.role);
+      const query = { email: req.query.email };
+      const { endrol } = await usersCollection.findOne(query);
+      console.log(endrol);
+      if (endrol) {
+        const doc = {
+          $set: {
+            endrol: endrol + 1,
+          },
+        };
+        const result = await usersCollection.updateOne(query, doc);
+        res.send(result);
+      } else {
+        const doc = {
+          $set: {
+            endrol: 1,
+          },
+        };
+        const result = await usersCollection.updateOne(query, doc);
+        res.send(result);
+      }
+    });
 
     //user end--------------------------
     //user end--------------------------
@@ -149,6 +189,14 @@ async function run() {
       res.send(result);
     });
     app.get("/addclasses", async (req, res) => {
+      const result = await classesCollection
+        .find({ Status: "approve" })
+        .sort({ endrol: -1 })
+        .limit(6)
+        .toArray();
+      res.send(result);
+    });
+    app.get("/allclasses", async (req, res) => {
       const result = await classesCollection
         .find({ Status: "approve" })
         .toArray();
@@ -191,6 +239,7 @@ async function run() {
       const doc = {
         $set: {
           Available_Seats: req.body.seat - 1,
+          endrol: req.body.totalSeat - req.body.seat + 1,
         },
       };
       const result = await classesCollection.updateOne(filter, doc);
