@@ -249,7 +249,10 @@ async function run() {
       res.send(result);
     });
     app.get("/payments", verifyJWT, async (req, res) => {
-      const result = await paymentCollection.find().toArray();
+      const result = await paymentCollection
+        .find()
+        .sort({ date: -1 })
+        .toArray();
       res.send(result);
     });
     app.post("/payments", verifyJWT, async (req, res) => {
