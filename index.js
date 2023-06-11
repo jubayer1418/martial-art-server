@@ -182,6 +182,20 @@ async function run() {
       //   res.send(result);
       // }
     });
+    app.patch("/addclass/availableseat/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(req.body);
+
+      const filter = { _id: new ObjectId(id) };
+      // if (req.query.status) {
+      const doc = {
+        $set: {
+          Available_Seats: req.body.seat - 1,
+        },
+      };
+      const result = await classesCollection.updateOne(filter, doc);
+      res.send(result);
+    });
     app.put("/addclass/:id", async (req, res) => {
       const id = req.params.id;
       const {
@@ -234,11 +248,18 @@ async function run() {
       const result = await studentClassCollection.updateOne(filter, doc);
       res.send(result);
     });
-    // app.post("/payments", verifyJWT, async (req, res) => {
-    //   const payment = req.body;
-    //   const result = await paymentCollection.insertOne(payment);
-    //   res.send(result);
-    // });
+    app.get("/payments", verifyJWT, async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    });
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment);
+      const query = { _id: new ObjectId(payment._id) };
+      const deleteResult = await studentClassCollection.deleteOne(query);
+      console.log(query);
+      res.send({ insertResult, deleteResult });
+    });
     app.delete("/selectedclass/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
