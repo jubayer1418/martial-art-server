@@ -298,8 +298,9 @@ async function run() {
       res.send(result);
     });
     app.get("/payments", verifyJWT, async (req, res) => {
+      const query = { email: req.query.email };
       const result = await paymentCollection
-        .find()
+        .find(query)
         .sort({ date: -1 })
         .toArray();
       res.send(result);
